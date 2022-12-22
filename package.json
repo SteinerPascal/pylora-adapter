@@ -1,0 +1,12 @@
+{
+  "name": "pylora-adapter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "types": "./main.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
