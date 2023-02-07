@@ -2,25 +2,15 @@ const { spawn } = require('child_process');
 declare var require: any
 
 
-const testFolder = '.';
-const fs = require('fs');
-
-
-
 export default class PyLoraAdapter{
-    sensor
+    private sensor
+    protected listeners: Array<({}:{[key:string]: any})=>void> = []
     constructor() {
-        fs.readdir(testFolder, (err, files) => {
-            files.forEach(file => {
-            //console.log('file')
-              //console.log(file);
-            });
-          });
-        this.sensor = spawn('python3', ['./sensor.py']);
-        
+        this.sensor = spawn('python3', [`${__dirname}/sensor.py`]);
+        this.startListening()
     }
 
-    listen(messageCB:({id,value}:{id:number,value:number})=>void){
+    private startListening() {
         this.sensor.on('exit', function (code, signal) {
             console.log('child process exited with ' +
                         `code ${code} and signal ${signal}`);
@@ -30,27 +20,28 @@ export default class PyLoraAdapter{
             console.error(`child stderr:\n${data}`);
           });
        
-        this.sensor.stdout.on('data', function(data) {
+        this.sensor.stdout.on('data', (data)=> {
     
             // Coerce Buffer object to Float
             const msg= {
                 id: 1,
+                type:'humidity',
                 value: parseFloat(data)
             }
             // Log to debug
             console.log('temperatures');
-            messageCB(msg)
+            this.listeners.forEach(cb => {
+                cb(msg)
+            });
         });
+    }
 
-       console.log('finish listening end of method')
+    listen(messageCB:({}:{[key:string]: any})=>void){
+        console.log('listener registered')
+        this.listeners.push(messageCB)
     }
 
     end() {
-        //sensor.kill('SIGINT');
+        this.sensor.kill('SIGINT');
     }
 }
-
-const cl = new PyLoraAdapter()
-cl.listen((data)=>{
-    console.log(data)
-})

@@ -1,9 +1,10 @@
 export default class PyLoraAdapter {
-    sensor: any;
+    private sensor;
+    private listeners;
     constructor();
-    listen(messageCB: ({ id, value }: {
-        id: number;
-        value: number;
+    private startListening;
+    listen(messageCB: ({}: {
+        [key: string]: any;
     }) => void): void;
     end(): void;
 }

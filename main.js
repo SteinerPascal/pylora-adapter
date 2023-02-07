@@ -1,19 +1,14 @@
 "use strict";
 exports.__esModule = true;
 var spawn = require('child_process').spawn;
-var testFolder = '.';
-var fs = require('fs');
 var PyLoraAdapter = /** @class */ (function () {
     function PyLoraAdapter() {
-        fs.readdir(testFolder, function (err, files) {
-            files.forEach(function (file) {
-                //console.log('file')
-                //console.log(file);
-            });
-        });
-        this.sensor = spawn('python3', ['./sensor.py']);
+        this.listeners = [];
+        this.sensor = spawn('python3', [__dirname + "/sensor.py"]);
+        this.startListening();
     }
-    PyLoraAdapter.prototype.listen = function (messageCB) {
+    PyLoraAdapter.prototype.startListening = function () {
+        var _this = this;
         this.sensor.on('exit', function (code, signal) {
             console.log('child process exited with ' +
                 ("code " + code + " and signal " + signal));
@@ -25,21 +20,23 @@ var PyLoraAdapter = /** @class */ (function () {
             // Coerce Buffer object to Float
             var msg = {
                 id: 1,
+                type: 'humidity',
                 value: parseFloat(data)
             };
             // Log to debug
             console.log('temperatures');
-            messageCB(msg);
+            _this.listeners.forEach(function (cb) {
+                cb(msg);
+            });
         });
-        console.log('finish listening end of method');
+    };
+    PyLoraAdapter.prototype.listen = function (messageCB) {
+        console.log('listener registered');
+        this.listeners.push(messageCB);
     };
     PyLoraAdapter.prototype.end = function () {
-        //sensor.kill('SIGINT');
+        this.sensor.kill('SIGINT');
     };
     return PyLoraAdapter;
 }());
 exports["default"] = PyLoraAdapter;
-var cl = new PyLoraAdapter();
-cl.listen(function (data) {
-    console.log(data);
-});
